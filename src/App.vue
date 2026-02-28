@@ -7,6 +7,7 @@ import {
 } from './api/divingFish.js'
 import {
   loadTierData,
+  loadDefaultTierData,
   saveTierData,
   exportTierData,
   importTierData,
@@ -68,7 +69,25 @@ const overallStats = computed(() => {
 
 // 初始化
 onMounted(async () => {
-  tierData.value = loadTierData()
+  // 先检查 localStorage 是否有数据
+  let storedData = null
+  const stored = localStorage.getItem('maimai_tier_data')
+  if (stored) {
+    try {
+      storedData = JSON.parse(stored)
+    } catch (e) {
+      console.error('解析本地数据失败:', e)
+    }
+  }
+
+  // 如果没有本地数据，加载内置数据
+  if (!storedData) {
+    tierData.value = await loadDefaultTierData()
+    saveTierData(tierData.value)
+  } else {
+    tierData.value = storedData
+  }
+
   await loadBaseData()
 })
 

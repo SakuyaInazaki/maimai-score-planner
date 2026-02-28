@@ -109,7 +109,7 @@ export function getTierDisplayName(tierName, level = '14') {
 }
 
 /**
- * 从 localStorage 加载分档数据
+ * 从 localStorage 加载分档数据，如果没有则加载内置数据
  */
 export function loadTierData() {
   const stored = localStorage.getItem(TIER_STORAGE_KEY)
@@ -119,6 +119,25 @@ export function loadTierData() {
     } catch (e) {
       console.error('加载分档数据失败:', e)
     }
+  }
+  return JSON.parse(JSON.stringify(defaultTierStructure))
+}
+
+/**
+ * 从内置 JSON 文件加载默认分档数据
+ */
+export async function loadDefaultTierData() {
+  try {
+    const response = await fetch('/tier-data.json')
+    if (response.ok) {
+      const data = await response.json()
+      if (data.tiers) {
+        return migrateLegacyData(data.tiers)
+      }
+      return data
+    }
+  } catch (e) {
+    console.error('加载内置分档数据失败:', e)
   }
   return JSON.parse(JSON.stringify(defaultTierStructure))
 }
