@@ -69,23 +69,33 @@ const overallStats = computed(() => {
 
 // 初始化
 onMounted(async () => {
-  // 先检查 localStorage 是否有数据
-  let storedData = null
+  // 先检查 localStorage 是否有有效数据
   const stored = localStorage.getItem('maimai_tier_data')
+  let hasValidData = false
+
   if (stored) {
     try {
-      storedData = JSON.parse(stored)
+      const parsed = JSON.parse(stored)
+      // 检查是否有实际的分档数据（统计总数）
+      let totalCount = 0
+      for (const level of ['14', '14+']) {
+        for (const tier of Object.keys(parsed[level] || {})) {
+          totalCount += (parsed[level][tier] || []).length
+        }
+      }
+      if (totalCount > 0) {
+        hasValidData = true
+        tierData.value = parsed
+      }
     } catch (e) {
       console.error('解析本地数据失败:', e)
     }
   }
 
-  // 如果没有本地数据，加载内置数据
-  if (!storedData) {
+  // 如果没有有效数据，加载内置数据
+  if (!hasValidData) {
     tierData.value = await loadDefaultTierData()
     saveTierData(tierData.value)
-  } else {
-    tierData.value = storedData
   }
 
   await loadBaseData()
